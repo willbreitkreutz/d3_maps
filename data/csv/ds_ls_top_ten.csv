@@ -1,4 +1,4 @@
-lat,lon,id,"location, state",levee_econ,levee_par,levee_life_safety,levee_performance_index,dam_econ,dam_par,dam_life_safety,combined_econ,combined-par,combined_life_safety
+lat,lon,id,"location",levee_econ,levee_par,levee_life_safety,levee_performance_index,dam_econ,dam_par,dam_life_safety,combined_econ,combined_par,combined_life_safety
 35.13715,-106.6257,1,"Albuquerque, NM",0,0,0,0,0,182600,0,0,182600,0
 33.83074,-84.33501,2,"Atlanta, GA",0,0,0,0,0,147900,0,0,147900,0
 35.35807,-119.03406,3,"Bakersfield, CA",0,0,0,0,23.509,340200,49,23.509,340200,49
