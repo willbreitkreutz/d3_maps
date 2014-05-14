@@ -52,7 +52,7 @@ d3.csv("../../data/csv/ds_ls_top_ten.csv", parse_ds_ls_top_ten, function(error, 
 	  .enter().append("option")
 		.text(function(d){return cleanText(d);});
 		
-	menu.property("value","levee_econ");
+	menu.property("value",cleanText("levee_econ"));
 	
 	redraw();
 });
@@ -90,6 +90,7 @@ function change(){
 	redraw();
 }
 
+var conflict = [];
 var redraw = function(){
 	var list1 = dirtyText(menu.property("value"));
 	var topTen = locations.sort(function(a,b){return b.properties[list1]-a.properties[list1];}).slice(0,10);
@@ -106,6 +107,8 @@ var redraw = function(){
 	
 	labels.exit().remove();
 	
+	conflict = [];
+	
 	circles.enter().append("circle")
 		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
 		.attr("r",function(d){
@@ -115,9 +118,9 @@ var redraw = function(){
 	labels.enter().append("text")
 		.attr("class","label")
 		.attr("x",function(d){return path.centroid(d)[0]; })
-		.attr("y",function(d){return path.centroid(d)[1]; })
+		.attr("y",function(d){return path.centroid(d)[1]+radius(d.properties[list1],list1)+10; })
 		.attr("text-anchor", "center")
-		.text(function(d){return d.properties.name + "\n" + cleanText(list1) + ' ' + formatNumber(d.properties[list1])});
+		.text(function(d){return d.properties.name + " " + formatNumber(d.properties[list1])});
 		
 	circles.transition()
 		.duration(duration)
@@ -129,7 +132,40 @@ var redraw = function(){
 	labels.transition()
 		.attr("class","label")
 		.attr("x",function(d){return path.centroid(d)[0]; })
-		.attr("y",function(d){return path.centroid(d)[1]; })
+		.attr("y",function(d){
+			var newy = path.centroid(d)[1]+radius(d.properties[list1],list1)+10; 
+			
+			var checkConflict = function(v){
+				var ret = v;
+				for(var i=0;i<conflict.length;i++){
+					if((conflict[i]-ret) < 15){
+						ret = checkConflict(ret-5);
+					}
+					return ret;
+				}
+				
+			}
+			var newy1 = checkConflict(newy);
+			conflict.push(newy1);
+			return newy1
+		})
 		.attr("text-anchor", "center")
-		.text(function(d){return d.properties.name + "\n" + cleanText(list1) + ' ' + formatNumber(d.properties[list1])});
+		.text(function(d){return d.properties.name + " " + formatNumber(d.properties[list1])});
+	
+	d3.selectAll(".legend").remove();
+	var legend = svg.append("g")
+		.attr("class", "legend")
+		.attr("transform", "translate(" + (width - 100) + "," + (height - 100) + ")")
+	  .selectAll("g")
+		.data([(domMax[list1]/4),(domMax[list1]/2),domMax[list1]])
+	  .enter().append("g");
+
+	legend.append("circle")
+		.attr("cy", function(d) { return -radius(d,list1); })
+		.attr("r", function(d){ return radius(d,list1)});
+
+	legend.append("text")
+		.attr("y", function(d) { return -2 * radius(d,list1); })
+		.attr("dy", "1.3em")
+		.text(d3.format(".1s"));
 }
