@@ -119,7 +119,6 @@ var redraw = function(){
 		.attr("class","label")
 		.attr("x",function(d){return path.centroid(d)[0]; })
 		.attr("y",function(d){return path.centroid(d)[1]+radius(d.properties[list1],list1)+10; })
-		.attr("text-anchor", "center")
 		.text(function(d){return d.properties.name + " " + formatNumber(d.properties[list1])});
 		
 	circles.transition()
@@ -132,24 +131,25 @@ var redraw = function(){
 	labels.transition()
 		.attr("class","label")
 		.attr("x",function(d){return path.centroid(d)[0]; })
-		.attr("y",function(d){
-			var newy = path.centroid(d)[1]+radius(d.properties[list1],list1)+10; 
-			
-			var checkConflict = function(v){
-				var ret = v;
-				for(var i=0;i<conflict.length;i++){
-					if((conflict[i]-ret) < 15){
-						ret = checkConflict(ret-5);
-					}
-					return ret;
-				}
-				
-			}
-			var newy1 = checkConflict(newy);
-			conflict.push(newy1);
-			return newy1
-		})
-		.attr("text-anchor", "center")
+		.attr("y",function(d){return path.centroid(d)[1]+radius(d.properties[list1],list1)+10; })
+		//.attr("y",function(d){
+		//	var newy = path.centroid(d)[1]+radius(d.properties[list1],list1)+10; 
+		//	
+		//	var checkConflict = function(v){
+		//		var ret = v;
+		//		for(var i=0;i<conflict.length;i++){
+		//			var delta = conflict[i]-ret;
+		//			if(delta < 10){
+		//				var q = 
+		//				ret = checkConflict(ret-15);
+		//			}
+		//		}
+		//		return ret;
+		//	}
+		//	var newy1 = checkConflict(newy);
+		//	if(newy1 !== undefined){conflict.push(newy1)};
+		//	return newy1
+		//})
 		.text(function(d){return d.properties.name + " " + formatNumber(d.properties[list1])});
 	
 	d3.selectAll(".legend").remove();
@@ -168,4 +168,41 @@ var redraw = function(){
 		.attr("y", function(d) { return -2 * radius(d,list1); })
 		.attr("dy", "1.3em")
 		.text(d3.format(".1s"));
+		
+	arrangeLabels();
+}
+
+function arrangeLabels() {
+  var move = 1;
+  while(move > 0) {
+    move = 0;
+    svg.selectAll(".label")
+       .each(function() {
+         var that = this,
+             a = this.getBoundingClientRect();
+         svg.selectAll(".label")
+            .each(function() {
+              if(this != that) {
+                var b = this.getBoundingClientRect();
+                if((Math.abs(a.left - b.left) * 2 < (a.width + b.width)) &&
+                   (Math.abs(a.top - b.top) * 2 < (a.height + b.height))) {
+                  // overlap, move labels
+                  var dx = (Math.max(0, a.right - b.left) +
+                           Math.min(0, a.left - b.right)) * 0.01,
+                      dy = (Math.max(0, a.bottom - b.top) +
+                           Math.min(0, a.top - b.bottom)) * 0.02,
+                      tt = d3.transform(d3.select(this).attr("transform")),
+                      to = d3.transform(d3.select(that).attr("transform"));
+                  move += Math.abs(dx) + Math.abs(dy);
+                
+                  to.translate = [ to.translate[0] + dx, to.translate[1] + dy ];
+                  tt.translate = [ tt.translate[0] - dx, tt.translate[1] - dy ];
+                  d3.select(this).attr("transform", "translate(" + tt.translate + ")");
+                  d3.select(that).attr("transform", "translate(" + to.translate + ")");
+                  a = this.getBoundingClientRect();
+                }
+              }
+            });
+       });
+  }
 }
